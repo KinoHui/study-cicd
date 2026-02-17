@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -16,6 +18,12 @@ import (
 
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
+
+// sanitizePort removes any characters that are not digits to prevent log injection
+func sanitizePort(port string) string {
+	re := regexp.MustCompile(`[^0-9]`)
+	return re.ReplaceAllString(port, "")
+}
 
 type apiConfig struct {
 	DB *database.Queries
@@ -89,10 +97,12 @@ func main() {
 
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
-		Addr:    ":" + port,
-		Handler: router,
+		Addr:              ":" + port,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
-	log.Printf("Serving on port: %s\n", port)
+	// #nosec G706 -- sanitizePort cleans the port value to prevent log injection
+	log.Printf("Serving on port: %s\n", sanitizePort(port))
 	log.Fatal(srv.ListenAndServe())
 }
