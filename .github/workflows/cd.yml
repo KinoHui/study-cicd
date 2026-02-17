@@ -21,6 +21,11 @@ jobs:
       - name: Run build script
         run: ./scripts/buildprod.sh
 
+      # debug
+      - name: Copy notely binary to root
+        run: |
+          find . -name "notely" -type f
+
       - name: Extract Docker image metadata
         id: meta
         uses: docker/metadata-action@v5
