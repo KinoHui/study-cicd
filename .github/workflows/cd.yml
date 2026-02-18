@@ -75,4 +75,5 @@ jobs:
               --name notely \
               --restart always \
               -p 8080:8080 \
+              -e DATABASE_URL="${{ secrets.DATABASE_URL }}" \
               ${{ vars.DOCKER_USERNAME }}/notely:main
