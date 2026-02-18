@@ -48,3 +48,28 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           annotations: ${{ steps.meta.outputs.annotations }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            # 登录 Docker Hub
+            docker login -u ${{ vars.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+            
+            # 拉取最新镜像
+            docker pull ${{ vars.DOCKER_USERNAME }}/notely:main
+            
+            # 停止并删除旧容器
+            docker stop notely || true
+            docker rm notely || true
+            
+            # 启动新容器
+            docker run -d \
+              --name notely \
+              --restart always \
+              -p 8080:8080 \
+              ${{ vars.DOCKER_USERNAME }}/notely:main
